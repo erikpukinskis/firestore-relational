@@ -1,0 +1,1 @@
+<b>firestore-relational</b> allows you to specify a set of relations between your firestore collections, and maintains those relations by copying documents onto their relations whenever they are added/removed/updated.
