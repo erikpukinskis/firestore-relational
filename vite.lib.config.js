@@ -1,5 +1,6 @@
 import path from "path"
 import { defineConfig } from "vite"
+import commonjsExternals from "vite-plugin-commonjs-externals"
 
 export default defineConfig({
   resolve: {
@@ -8,7 +9,11 @@ export default defineConfig({
     },
   },
 
-  plugins: [],
+  plugins: [
+    commonjsExternals({
+      "externals": ["fs"],
+    }),
+  ],
 
   build: {
     emptyOutDir: false,

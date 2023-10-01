@@ -1,6 +1,8 @@
 export {
-  project as schema,
+  project,
   collection,
   hasOne,
   hasMany,
 } from "./relations"
+
+export * from "./getFirebaseFunctions"

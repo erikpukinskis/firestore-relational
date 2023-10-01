@@ -24,7 +24,6 @@ export async function deployFixtureFunctions(
     "functions/index.js"
   )
 
-  console.log("fetching", getFunctionUrl("fixtureFilename"))
   const response = await fetch(getFunctionUrl("fixtureFilename"))
   const text = await response.text()
 

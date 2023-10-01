@@ -87,13 +87,21 @@ describe("migrating existing collections", () => {
   withFirebaseEmulators(beforeAll, afterAll)
 
   it("should add recursive children but not grandchildren", async () => {
-    deployFixtureFunctions("recipes-have-recipes.js")
+    await deployFixtureFunctions("recipes-have-recipes.js")
 
-    const response = await fetch(getFunctionUrl("migrate"), {
-      method: "POST",
-      body: JSON.stringify({ collectionName: "recipes" }),
-    })
+    const response = await fetch(
+      getFunctionUrl("relational-migrate"),
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+        },
+        body: JSON.stringify({
+          data: { collectionName: "recipes" },
+        }),
+      }
+    )
 
-    console.log(await response.text())
+    expect(response.status).toBe(200)
   })
 })
