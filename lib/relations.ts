@@ -1,8 +1,10 @@
-type Schema = {
+export type FirestoreProjectSchema = {
   collections: CollectionSchema[]
 }
 
-export function schema(collections: CollectionSchema[]): Schema {
+export function project(
+  collections: CollectionSchema[]
+): FirestoreProjectSchema {
   return { collections }
 }
 

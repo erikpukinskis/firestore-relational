@@ -1,1 +1,6 @@
-export { schema, collection, hasOne, hasMany } from "./schema"
+export {
+  project as schema,
+  collection,
+  hasOne,
+  hasMany,
+} from "./relations"

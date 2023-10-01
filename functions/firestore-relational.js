@@ -1,0 +1,2 @@
+(function(e,t){typeof exports=="object"&&typeof module<"u"?t(exports):typeof define=="function"&&define.amd?define(["exports"],t):(e=typeof globalThis<"u"?globalThis:e||self,t(e.FirestoreRelational={}))})(this,function(e){"use strict";function t(n){return{collections:n}}function i(n,f){return{path:n,relations:f}}function o(n){return{type:"has-many",...n}}function u(n){return{type:"has-one",...n}}e.collection=i,e.hasMany=o,e.hasOne=u,e.schema=t,Object.defineProperty(e,Symbol.toStringTag,{value:"Module"})});
+//# sourceMappingURL=lib.umd.js.map

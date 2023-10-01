@@ -1,11 +1,26 @@
 {
   "emulators": {
+    "functions": {
+      "port": 4001
+    },
     "firestore": {
-      "port": 5002
+      "port": 4002
     },
     "ui": {
       "enabled": true,
-      "port": 5003
+      "port": 4003
     }
-  }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log"
+      ]
+    }
+  ]
 }
