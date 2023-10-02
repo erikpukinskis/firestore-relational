@@ -1,7 +1,8 @@
-import { spawnSync } from "child_process"
 import fetch from "cross-fetch"
 import { cpSync } from "fs"
 import { expect } from "vitest"
+import { initializeApp } from "firebase-admin/app"
+import { execSync } from "child_process"
 
 const FIRESTORE_EMULATOR_HOST = "127.0.0.1:4002"
 const FIRESTORE_FUNCTIONS_HOST = "127.0.0.1:4001"
@@ -23,10 +24,10 @@ export async function deployFixtureFunctions(
     `lib/test/fixtures/${fixtureFilename}`,
     "functions/index.js"
   )
+  execSync("node functions/index.js").toString()
 
   const response = await fetch(getFunctionUrl("fixtureFilename"))
   const text = await response.text()
-
   expect(text).toBe(fixtureFilename)
 }
 
@@ -51,6 +52,10 @@ export function withFirebaseEmulators(
 ) {
   beforeAll(async () => {
     connectToEmulators()
+    initializeApp({
+      projectId: FIRESTORE_PROJECT,
+    })
+    // await deployFixtureFunctions("none.js")
     await deleteAllDocuments()
   })
 }
