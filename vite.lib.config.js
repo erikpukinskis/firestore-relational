@@ -27,13 +27,20 @@ export default defineConfig({
     rollupOptions: {
       // make sure to externalize deps that shouldn't be bundled
       // into your library
-      external: ["firebase-admin", "firebase-functions"],
+      external: [
+        "firebase-admin",
+        "firebase-functions",
+        "firebase-admin/firestore",
+        "firebase-admin/app",
+      ],
       output: {
         // Provide global variables to use in the UMD build
         // for externalized deps
         globals: {
           "firebase-admin": "firebaseadmin",
           "firebase-functions": "firebasefunctions",
+          "firebase-admin/firestore": "firebaseadminfirestore",
+          "firebase-admin/app": "firebaseadminapp",
         },
       },
     },
