@@ -2,6 +2,7 @@ import { getFirestore } from "firebase-admin/firestore"
 
 export type Recipe = {
   id: string
+  createdAt: number
   title: string
   parentRecipeId?: string | null
   parentRecipe?: Recipe
@@ -15,6 +16,7 @@ export async function setUpRecipe({
   ...overrides
 }: Partial<Recipe> = {}) {
   const properties = {
+    createdAt: new Date().getTime(),
     title: `Recipe No.${++recipeCount}`,
     parentRecipeId: parentRecipe?.id ?? null,
     ...overrides,
@@ -68,6 +70,7 @@ function getRandomColorName() {
 
 export type Tag = {
   id: string
+  createdAt: number
   name: string
   color: string
 }
@@ -76,6 +79,7 @@ let tagCount = 0
 
 export async function setUpTag(overrides: Partial<Tag> = {}) {
   const properties = {
+    createdAt: new Date().getTime(),
     name: `Tag No.${++tagCount}`,
     color: getRandomColorName(),
     ...overrides,
@@ -95,6 +99,7 @@ export async function setUpTag(overrides: Partial<Tag> = {}) {
 
 export type RecipexTag = {
   id: string
+  createdAt: number
   recipeId: string
   tagId: string
   recipe: Recipe
@@ -108,6 +113,7 @@ export async function setUpRecipexTag(
   const tag = overrides.tag ?? (await setUpTag()).tag
 
   const properties = {
+    createdAt: new Date().getTime(),
     recipeId: recipe.id,
     tagId: tag.id,
   }

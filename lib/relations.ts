@@ -10,39 +10,58 @@ export function project(
 
 type CollectionSchema = {
   path: string
+  sequenceKey: string
   relations: Record<string, Relation>
 }
 
 export function collection(
   path: string,
-  relations: Record<string, Relation>
+  fields: Record<string, Relation | SequenceField> = {}
 ): CollectionSchema {
-  return { path, relations }
+  const relations: Record<string, Relation> = {}
+  let sequenceKey: string | undefined
+
+  for (const key in fields) {
+    const relation = fields[key]
+    if (relation.type === "sequence-field") {
+      sequenceKey = key
+    } else {
+      relations[key] = relation
+    }
+  }
+
+  if (!sequenceKey) {
+    throw new Error(
+      `Your collection must include a sequence field for ordering migrations. Try adding createdAt: sequenceField() to your ${path} schema.`
+    )
+  }
+
+  return { path, relations, sequenceKey }
 }
 
-type Relation = {
+type SequenceField = {
+  type: "sequence-field"
+}
+
+export type Relation = {
   type: "has-many" | "has-one"
-  collection: string
+  collection: CollectionSchema
   localKey: string
   foreignKey: string
 }
 
-export function hasMany(args: {
-  collection: string
-  localKey: string
-  foreignKey: string
-}): Relation {
+export function sequenceField() {
+  return { type: "sequence-field" } as SequenceField
+}
+
+export function hasMany(args: Omit<Relation, "type">): Relation {
   return {
     type: "has-many",
     ...args,
   }
 }
 
-export function hasOne(args: {
-  collection: string
-  localKey: string
-  foreignKey: string
-}): Relation {
+export function hasOne(args: Omit<Relation, "type">): Relation {
   return {
     type: "has-one",
     ...args,
