@@ -87,45 +87,49 @@ import {
 //   }),
 // ])
 
-describe("migrating existing collections", () => {
-  withFirebaseEmulators(beforeAll, afterAll)
+describe(
+  "migrating existing collections",
+  () => {
+    withFirebaseEmulators(beforeAll, afterAll)
 
-  it("should migrate recursive children", async () => {
-    const { tag } = await setUpTag({ name: "blue corn" })
-    const { recipe } = await setUpRecipe({ title: "Tlacoyos" })
-    await setUpRecipexTag({ tag, recipe })
+    it("should migrate recursive children", async () => {
+      const { tag } = await setUpTag({ name: "blue corn" })
+      const { recipe } = await setUpRecipe({ title: "Tlacoyos" })
+      await setUpRecipexTag({ tag, recipe })
 
-    await deployFixtureFunctions("recipes-have-tags.js")
+      await deployFixtureFunctions("recipes-have-tags.js")
 
-    const response = await fetch(
-      getFunctionUrl("relational-migrate"),
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
+      const response = await fetch(
+        getFunctionUrl("relational-migrate"),
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+          },
+          body: JSON.stringify({
+            data: { collectionPath: "recipes" },
+          }),
+        }
+      )
+
+      expect(response.status).toBe(200)
+      expect(await response.json()).toMatchObject({
+        result: {
+          collectionPath: "recipes",
         },
-        body: JSON.stringify({
-          data: { collectionPath: "recipes" },
-        }),
-      }
-    )
+      })
 
-    expect(response.status).toBe(200)
-    expect(await response.json()).toMatchObject({
-      result: {
-        collectionPath: "recipes",
-      },
+      const updatedRecipe = await getRecipe(recipe.id)
+
+      expect(updatedRecipe).toHaveProperty("recipexTags")
+      expect(updatedRecipe.recipexTags).toHaveLength(1)
+      expect(updatedRecipe.recipexTags[0]).toMatchObject({
+        tagId: tag.id,
+      })
+      // expect(updatedRecipe.recipexTags[0].tag).toMatchObject({
+      //   name: "blue corn",
+      // })
     })
-
-    const updatedRecipe = await getRecipe(recipe.id)
-
-    expect(updatedRecipe).toHaveProperty("recipexTags")
-    expect(updatedRecipe.recipexTags).toHaveLength(1)
-    expect(updatedRecipe.recipexTags[0]).toMatchObject({
-      tagId: tag.id,
-    })
-    // expect(updatedRecipe.recipexTags[0].tag).toMatchObject({
-    //   name: "blue corn",
-    // })
-  })
-})
+  },
+  1000 * 60 * 10
+)

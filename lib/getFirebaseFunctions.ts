@@ -5,57 +5,78 @@ type MigrateData = {
   collectionPath: string
 }
 
-import { https } from "firebase-functions"
+import { onCall } from "firebase-functions/v2/https"
 
 export function getFirebaseFunctions(
   schema: FirestoreProjectSchema
 ) {
   return {
-    migrate: https.onCall(async (data: MigrateData) => {
-      const { collectionPath } = data
-      const collectionSchema = schema.collections.find(
-        ({ path }) => path === collectionPath
-      )
-      if (!collectionSchema) {
-        const paths = schema.collections.map(({ path }) => path)
-        throw new Error(
-          `No schema found for collection with path ${collectionPath}. Schemas found for ${paths.join(
-            ","
-          )}`
+    migrate: onCall<MigrateData>(
+      { timeoutSeconds: 540 },
+      async (request) => {
+        console.log("migrate me!")
+        debugger
+        const { collectionPath } = request.data
+        const collectionSchema = schema.collections.find(
+          ({ path }) => path === collectionPath
         )
-      }
-      const { path, relations, sequenceKey } = collectionSchema
-      const relationEntries = Object.entries(relations)
-      const querySnapshot = await getFirestore()
-        .collection(path)
-        .get()
-      for (const docSnapshot of querySnapshot.docs) {
-        const data = {
-          id: docSnapshot.id,
-          ...docSnapshot.data(),
+        if (!collectionSchema) {
+          const paths = schema.collections.map(
+            ({ path }) => path
+          )
+          throw new Error(
+            `No schema found for collection with path ${collectionPath}. Schemas found for ${paths.join(
+              ","
+            )}`
+          )
         }
-        const relationData = await getRelationData(
-          `${collectionPath}/${docSnapshot.id}`,
-          data,
-          relationEntries,
-          schema
-        )
-        if (
-          JSON.stringify({ ...data, relationData }) ===
-          JSON.stringify(data)
-        ) {
-          continue
+        const { path, relations, sequenceKey } = collectionSchema
+        const relationEntries = Object.entries(relations)
+        const querySnapshot = await getFirestore()
+          .collection(path)
+          .get()
+        for (const docSnapshot of querySnapshot.docs) {
+          const data = {
+            id: docSnapshot.id,
+            ...docSnapshot.data(),
+          }
+          const relationData = await getRelationData(
+            `${collectionPath}/${docSnapshot.id}`,
+            data,
+            relationEntries,
+            schema
+          )
+
+          const jsonBefore = JSON.stringify(data)
+          const jsonAfter = JSON.stringify({
+            ...data,
+            ...relationData,
+          })
+          const jsonRelational = JSON.stringify(relationData)
+
+          if (
+            jsonAfter === jsonBefore ||
+            jsonRelational === "{}"
+          ) {
+            continue
+          }
+
+          console.log("diff!", {
+            data,
+            relationData,
+            jsonRelational,
+          })
+
+          await getFirestore()
+            .doc(`${collectionPath}/${docSnapshot.id}`)
+            .update(relationData)
         }
-        console.log("diff!", { data, relationData })
-        await getFirestore()
-          .doc(`${collectionPath}/${docSnapshot.id}`)
-          .update(relationData)
+        return {
+          message: "This is where we would migrate",
+          collectionPath,
+        }
       }
-      return {
-        message: "This is where we would migrate",
-        collectionPath,
-      }
-    }),
+    ),
   }
 }
 

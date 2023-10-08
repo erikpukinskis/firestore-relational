@@ -52,8 +52,9 @@
     "fix:format": "prettier --write --ignore-path .gitignore .",
     "fix:lint": "eslint --ignore-path .gitignore --no-error-on-unmatched-pattern . --fix; if [ $? -eq 0 ]; then echo 8J+OiSBObyBsaW50IGluIHRoaXMgY29kZSEKCg== | base64 -d; else exit 1; fi",
     "start:docs:dev": "vite serve docs --config vite.docs.config.js",
-    "start:emulators": "firebase emulators:start",
+    "start:emulators": "firebase emulators:start --inspect-functions 4010",
     "test": "vitest run --config vite.test.config.js",
+    "test:inspect": "TEST_INSPECT=true vitest run --config vite.test.config.js",
     "watch:test": "vitest watch --config vite.test.config.js"
   }
 }

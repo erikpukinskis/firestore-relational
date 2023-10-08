@@ -119,7 +119,7 @@ export async function setUpRecipexTag(
   }
 
   const ref = await getFirestore()
-    .collection("recipe-x-tag")
+    .collection("recipexTags")
     .add(properties)
 
   const recipexTag = {

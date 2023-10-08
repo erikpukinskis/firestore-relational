@@ -19,13 +19,13 @@ const FIRESTORE_PROJECT = "firestore-relational-test"
 export async function deployFixtureFunctions(
   fixtureFilename: string
 ) {
+  if (process.env.TEST_INSPECT) return
   cpSync("dist/lib.umd.js", "functions/firestore-relational.js")
   cpSync(
     `lib/test/fixtures/${fixtureFilename}`,
     "functions/index.js"
   )
   execSync("node functions/index.js").toString()
-
   const response = await fetch(getFunctionUrl("fixtureFilename"))
   const text = await response.text()
   expect(text).toBe(fixtureFilename)
