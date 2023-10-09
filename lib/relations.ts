@@ -10,37 +10,21 @@ export function project(
 
 export type CollectionSchema = {
   path: string
-  sequenceKey?: string
   relations: Record<string, Relation>
 }
 
 export function collection(
   path: string,
-  fields: Record<string, Relation | SequenceField> = {}
+  fields: Record<string, Relation> = {}
 ): CollectionSchema {
   const relations: Record<string, Relation> = {}
-  let sequenceKey: string | undefined
 
   for (const key in fields) {
     const relation = fields[key]
-    if (relation.type === "sequence-field") {
-      sequenceKey = key
-    } else {
-      relations[key] = relation
-    }
+    relations[key] = relation
   }
 
-  // if (!sequenceKey) {
-  //   throw new Error(
-  //     `Your collection must include a sequence field for ordering migrations. Try adding createdAt: sequenceField() to your ${path} schema.`
-  //   )
-  // }
-
-  return { path, relations, sequenceKey }
-}
-
-type SequenceField = {
-  type: "sequence-field"
+  return { path, relations }
 }
 
 export type Relation = {
@@ -54,10 +38,6 @@ type Relationargs = {
   collection: CollectionSchema | string
   localKey: string
   foreignKey: string
-}
-
-export function sequenceField() {
-  return { type: "sequence-field" } as SequenceField
 }
 
 export function hasMany(args: Relationargs): Relation {

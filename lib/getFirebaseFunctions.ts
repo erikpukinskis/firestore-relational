@@ -38,7 +38,7 @@ export function getFirebaseFunctions(
             )}`
           )
         }
-        const { path, relations, sequenceKey } = collectionSchema
+        const { path, relations } = collectionSchema
         const relationEntries = Object.entries(relations)
         const querySnapshot = await getFirestore()
           .collection(path)
