@@ -8,9 +8,9 @@ export function project(
   return { collections }
 }
 
-type CollectionSchema = {
+export type CollectionSchema = {
   path: string
-  sequenceKey: string
+  sequenceKey?: string
   relations: Record<string, Relation>
 }
 
@@ -30,11 +30,11 @@ export function collection(
     }
   }
 
-  if (!sequenceKey) {
-    throw new Error(
-      `Your collection must include a sequence field for ordering migrations. Try adding createdAt: sequenceField() to your ${path} schema.`
-    )
-  }
+  // if (!sequenceKey) {
+  //   throw new Error(
+  //     `Your collection must include a sequence field for ordering migrations. Try adding createdAt: sequenceField() to your ${path} schema.`
+  //   )
+  // }
 
   return { path, relations, sequenceKey }
 }
@@ -50,20 +50,34 @@ export type Relation = {
   foreignKey: string
 }
 
+type Relationargs = {
+  collection: CollectionSchema | string
+  localKey: string
+  foreignKey: string
+}
+
 export function sequenceField() {
   return { type: "sequence-field" } as SequenceField
 }
 
-export function hasMany(args: Omit<Relation, "type">): Relation {
+export function hasMany(args: Relationargs): Relation {
   return {
     type: "has-many",
     ...args,
+    collection:
+      typeof args.collection === "string"
+        ? collection(args.collection)
+        : args.collection,
   }
 }
 
-export function hasOne(args: Omit<Relation, "type">): Relation {
+export function hasOne(args: Relationargs): Relation {
   return {
     type: "has-one",
     ...args,
+    collection:
+      typeof args.collection === "string"
+        ? collection(args.collection)
+        : args.collection,
   }
 }

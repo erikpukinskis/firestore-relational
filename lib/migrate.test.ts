@@ -126,9 +126,9 @@ describe(
       expect(updatedRecipe.recipexTags[0]).toMatchObject({
         tagId: tag.id,
       })
-      // expect(updatedRecipe.recipexTags[0].tag).toMatchObject({
-      //   name: "blue corn",
-      // })
+      expect(updatedRecipe.recipexTags[0].tag).toMatchObject({
+        name: "blue corn",
+      })
     })
   },
   1000 * 60 * 10

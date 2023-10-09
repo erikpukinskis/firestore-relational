@@ -19,15 +19,38 @@ const FIRESTORE_PROJECT = "firestore-relational-test"
 export async function deployFixtureFunctions(
   fixtureFilename: string
 ) {
-  if (process.env.TEST_INSPECT) return
-  cpSync("dist/lib.umd.js", "functions/firestore-relational.js")
+  // Make sure the file compiles
   cpSync(
-    `lib/test/fixtures/${fixtureFilename}`,
-    "functions/index.js"
+    "dist/lib.umd.js",
+    "lib/test/fixtures/firestore-relational.js"
   )
-  execSync("node functions/index.js").toString()
+  execSync(`node lib/test/fixtures/${fixtureFilename}`)
+
+  // If we are debugging in Chrome, we don't want to copy over the file because
+  // it will cause the inspector to disconnect
+  if (process.env.DEPLOY_TEST_FUNCTIONS === "false") {
+    console.warn(
+      "Skipping deploy of test functions; using whatever is in functions/index.js"
+    )
+  } else {
+    // But for running the full test suite of course we'll need to copy over the
+    // files. Both the current version of firestore-relational and the fixture
+    // functions file
+    cpSync(
+      "dist/lib.umd.js",
+      "functions/firestore-relational.js"
+    )
+    cpSync(
+      `lib/test/fixtures/${fixtureFilename}`,
+      "functions/index.js"
+    )
+  }
+
+  // We do want to check to make sure the fixture was loaded successfully. All
+  // of the fixtures should implement this endpoint:
   const response = await fetch(getFunctionUrl("fixtureFilename"))
   const text = await response.text()
+
   expect(text).toBe(fixtureFilename)
 }
 

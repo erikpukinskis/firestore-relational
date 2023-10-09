@@ -1,5 +1,15 @@
-import { Query, getFirestore } from "firebase-admin/firestore"
-import { FirestoreProjectSchema, Relation } from "./relations"
+import {
+  DocumentSnapshot,
+  FieldPath,
+  Firestore,
+  Query,
+  getFirestore,
+} from "firebase-admin/firestore"
+import {
+  CollectionSchema,
+  FirestoreProjectSchema,
+  Relation,
+} from "./relations"
 
 type MigrateData = {
   collectionPath: string
@@ -14,8 +24,6 @@ export function getFirebaseFunctions(
     migrate: onCall<MigrateData>(
       { timeoutSeconds: 540 },
       async (request) => {
-        console.log("migrate me!")
-        debugger
         const { collectionPath } = request.data
         const collectionSchema = schema.collections.find(
           ({ path }) => path === collectionPath
@@ -92,48 +100,88 @@ async function getRelationData(
     relationKey,
     { type, localKey, foreignKey, collection },
   ] of relations) {
+    const localValue = data[localKey]
+    if (localValue == null) {
+      console.warn(
+        `Tried to set up relation between document ${documentPath} and ${collection.path} but the ${localKey} field was not defined.`
+      )
+      continue
+    }
+
+    const querySnapshot = await getFirestore()
+      .collection(collection.path)
+      .where(
+        foreignKey === "id"
+          ? FieldPath.documentId()
+          : foreignKey,
+        "==",
+        localValue
+      )
+      .get()
+
     if (type === "has-many") {
-      const localValue = data[localKey]
-      if (localValue == null) {
+      const docs: unknown[] = []
+
+      for (const docSnapshot of querySnapshot.docs) {
+        const doc = await getDocWithRelationData(
+          docSnapshot,
+          collection,
+          schema
+        )
+
+        docs.push(doc)
+      }
+      relationData[relationKey] = docs
+    } else if (type === "has-one") {
+      const [docSnapshot] = querySnapshot.docs
+
+      if (!docSnapshot) {
         console.warn(
-          `Tried to set up relation between document ${documentPath} and ${collection.path} but the ${localKey} field was not defined.`
+          `Tried to set up relation between document ${documentPath} and ${
+            collection.path
+          } but there are no documents with ${foreignKey} == ${JSON.stringify(
+            localValue
+          )}`
         )
         continue
       }
 
-      const querySnapshot = await getFirestore()
-        .collection(collection.path)
-        .where(foreignKey, "==", localValue)
-        .get()
-
-      const docs: unknown[] = []
-
-      for (const docSnapshot of querySnapshot.docs) {
-        const doc = {
-          id: docSnapshot.id,
-          ...docSnapshot.data(),
-        }
-
-        if (Object.keys(collection.relations).length > 1) {
-          Object.assign(
-            doc,
-            await getRelationData(
-              `${collection.path}/${docSnapshot.id}`,
-              doc,
-              Object.entries(collection.relations),
-              schema
-            )
-          )
-        }
-
-        docs.push(doc)
-
-        relationData[relationKey] = docs
-      }
-    } else if (type === "has-one") {
-      console.log("has-one not yet supported")
+      relationData[relationKey] = await getDocWithRelationData(
+        docSnapshot,
+        collection,
+        schema
+      )
     }
   }
 
   return relationData
+}
+
+async function getDocWithRelationData(
+  docSnapshot: DocumentSnapshot,
+  collection: CollectionSchema,
+  schema: FirestoreProjectSchema
+) {
+  const docHasRelations =
+    Object.keys(collection.relations).length > 0
+
+  const data = {
+    id: docSnapshot.id,
+    ...docSnapshot.data(),
+  }
+
+  if (!docHasRelations) {
+    return data
+  }
+
+  const docRelationData = await getRelationData(
+    `${collection.path}/${docSnapshot.id}`,
+    data,
+    Object.entries(collection.relations),
+    schema
+  )
+
+  Object.assign(data, docRelationData)
+
+  return data
 }

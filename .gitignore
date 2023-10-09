@@ -8,3 +8,4 @@ firestore-debug.log
 ui-debug.log
 firebase-debug.log
 functions/index.js
+lib/test/fixtures/firestore-relational.js
