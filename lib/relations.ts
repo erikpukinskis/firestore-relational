@@ -1,3 +1,5 @@
+import { hash } from "./helpers"
+
 export type FirestoreProjectSchema = {
   collections: CollectionSchema[]
 }
@@ -11,6 +13,7 @@ export function project(
 export type CollectionSchema = {
   path: string
   relations: Record<string, Relation>
+  hash: string
 }
 
 export function collection(
@@ -24,7 +27,7 @@ export function collection(
     relations[key] = relation
   }
 
-  return { path, relations }
+  return { path, relations, hash: hash({ path, relations }) }
 }
 
 export type Relation = {

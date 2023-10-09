@@ -9,12 +9,16 @@ export type Recipe = {
   recipexTags: RecipexTag[]
 }
 
+type Migratable = {
+  __firestoreRelationalSchemaHash?: string | null
+}
+
 let recipeCount = 0
 
 export async function setUpRecipe({
   parentRecipe,
   ...overrides
-}: Partial<Recipe> = {}) {
+}: Partial<Recipe> & Migratable = {}) {
   const properties = {
     createdAt: new Date().getTime(),
     title: `Recipe No.${++recipeCount}`,
@@ -77,7 +81,9 @@ export type Tag = {
 
 let tagCount = 0
 
-export async function setUpTag(overrides: Partial<Tag> = {}) {
+export async function setUpTag(
+  overrides: Partial<Tag> & Migratable = {}
+) {
   const properties = {
     createdAt: new Date().getTime(),
     name: `Tag No.${++tagCount}`,
@@ -107,7 +113,7 @@ export type RecipexTag = {
 }
 
 export async function setUpRecipexTag(
-  overrides: Partial<RecipexTag> = {}
+  overrides: Partial<RecipexTag> & Migratable = {}
 ) {
   const recipe = overrides.recipe ?? (await setUpRecipe()).recipe
   const tag = overrides.tag ?? (await setUpTag()).tag

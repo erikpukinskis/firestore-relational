@@ -1,6 +1,7 @@
 import {
   DocumentSnapshot,
   FieldPath,
+  Filter,
   Firestore,
   Query,
   getFirestore,
@@ -16,6 +17,7 @@ type MigrateData = {
 }
 
 import { onCall } from "firebase-functions/v2/https"
+import { hash } from "./helpers"
 
 export function getFirebaseFunctions(
   schema: FirestoreProjectSchema
@@ -28,6 +30,7 @@ export function getFirebaseFunctions(
         const collectionSchema = schema.collections.find(
           ({ path }) => path === collectionPath
         )
+
         if (!collectionSchema) {
           const paths = schema.collections.map(
             ({ path }) => path
@@ -38,16 +41,28 @@ export function getFirebaseFunctions(
             )}`
           )
         }
+
+        const schemaHash = hash(collectionSchema)
         const { path, relations } = collectionSchema
         const relationEntries = Object.entries(relations)
+
         const querySnapshot = await getFirestore()
           .collection(path)
           .get()
+
         for (const docSnapshot of querySnapshot.docs) {
-          const data = {
+          const data: Record<string, any> = {
             id: docSnapshot.id,
             ...docSnapshot.data(),
           }
+
+          const documentSchemaHash =
+            data["__firestoreRelationalSchemaHash"]
+
+          if (documentSchemaHash === schemaHash) {
+            continue
+          }
+
           const relationData = await getRelationData(
             `${collectionPath}/${docSnapshot.id}`,
             data,
@@ -68,12 +83,6 @@ export function getFirebaseFunctions(
           ) {
             continue
           }
-
-          console.log("diff!", {
-            data,
-            relationData,
-            jsonRelational,
-          })
 
           await getFirestore()
             .doc(`${collectionPath}/${docSnapshot.id}`)

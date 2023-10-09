@@ -66,6 +66,8 @@ type SetupTeardownFunction = (
   callback: () => void | Promise<void>
 ) => void
 
+let appIsInitialized = false
+
 /**
  * Sets up the Firebase emulators to work with the tests.
  */
@@ -74,10 +76,14 @@ export function withFirebaseEmulators(
   afterAll: SetupTeardownFunction
 ) {
   beforeAll(async () => {
+    console.log("calling beforeAll")
     connectToEmulators()
-    initializeApp({
-      projectId: FIRESTORE_PROJECT,
-    })
+    if (!appIsInitialized) {
+      initializeApp({
+        projectId: FIRESTORE_PROJECT,
+      })
+      appIsInitialized = true
+    }
     // await deployFixtureFunctions("none.js")
     await deleteAllDocuments()
   })
