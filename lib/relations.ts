@@ -1,3 +1,5 @@
+import { hash } from "./helpers"
+
 export type FirestoreProjectSchema = {
   collections: CollectionSchema[]
 }
@@ -8,43 +10,57 @@ export function project(
   return { collections }
 }
 
-type CollectionSchema = {
+export type CollectionSchema = {
   path: string
   relations: Record<string, Relation>
+  hash: string
 }
 
 export function collection(
   path: string,
-  relations: Record<string, Relation>
+  fields: Record<string, Relation> = {}
 ): CollectionSchema {
-  return { path, relations }
+  const relations: Record<string, Relation> = {}
+
+  for (const key in fields) {
+    const relation = fields[key]
+    relations[key] = relation
+  }
+
+  return { path, relations, hash: hash({ path, relations }) }
 }
 
-type Relation = {
+export type Relation = {
   type: "has-many" | "has-one"
-  collection: string
+  collection: CollectionSchema
   localKey: string
   foreignKey: string
 }
 
-export function hasMany(args: {
-  collection: string
+type Relationargs = {
+  collection: CollectionSchema | string
   localKey: string
   foreignKey: string
-}): Relation {
+}
+
+export function hasMany(args: Relationargs): Relation {
   return {
     type: "has-many",
     ...args,
+    collection:
+      typeof args.collection === "string"
+        ? collection(args.collection)
+        : args.collection,
   }
 }
 
-export function hasOne(args: {
-  collection: string
-  localKey: string
-  foreignKey: string
-}): Relation {
+export function hasOne(args: Relationargs): Relation {
   return {
     type: "has-one",
     ...args,
+    collection:
+      typeof args.collection === "string"
+        ? collection(args.collection)
+        : args.collection,
   }
 }

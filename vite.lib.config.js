@@ -17,7 +17,7 @@ export default defineConfig({
 
   build: {
     emptyOutDir: false,
-    sourcemap: true,
+    sourcemap: "inline",
     lib: {
       entry: path.resolve(__dirname, "lib/index.ts"),
       name: "FirestoreRelational",
@@ -27,13 +27,23 @@ export default defineConfig({
     rollupOptions: {
       // make sure to externalize deps that shouldn't be bundled
       // into your library
-      external: ["firebase-admin", "firebase-functions"],
+      external: [
+        "firebase-admin",
+        "firebase-functions",
+        "firebase-admin/firestore",
+        "firebase-admin/app",
+        "firebase-functions/v2/https",
+      ],
       output: {
         // Provide global variables to use in the UMD build
         // for externalized deps
         globals: {
           "firebase-admin": "firebaseadmin",
           "firebase-functions": "firebasefunctions",
+          "firebase-admin/firestore": "firebaseadminfirestore",
+          "firebase-admin/app": "firebaseadminapp",
+          "firebase-functions/v2/https":
+            "firebasefunctionsv2https",
         },
       },
     },
